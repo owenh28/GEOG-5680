@@ -25,7 +25,7 @@ legend('topleft', legend = levels(iris$Species), pch= c(15, 16, 23), col='orange
 # Different symbol sizes
 
 plot(iris$Petal.Length, iris$Petal.Width, xlab = 'Petal Length (cm)', ylab = 'Petal Width (cm)',
-     main = "Fisher's Iris Dataset", pch = 16, col = 'salmon', cex = c(0.5,1,1.5)[as.numeric(iris$Species)])
+     main = "Fisher's Iris Dataset", pch = 16, col = 'salmon', cex = c(0.5,1,1.5)[as.numeric(iris$Sepal.Width)])
 
 # Smoothing line
 
