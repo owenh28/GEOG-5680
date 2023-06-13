@@ -1,0 +1,70 @@
+---
+title: Module 8
+author: "Owen Harlacker"
+date: June 13, 2023
+output: html_document
+---
+
+## Using dplyr in R
+
+Start with some data:
+```{r}
+library(dplyr)
+library(ggplot2)
+
+theoph <- read.csv('./theoph.csv')
+theoph$Subject <- factor(theoph$Subject)
+head(theoph)
+```
+
+
+Select subject ID, Time and conc:
+```{r}
+theoph_sic <- select(theoph, Subject, Time, conc)
+head(theoph_sic)
+```
+
+Just subject, weight, dose:
+```{r}
+sub_wt_dose <- select(theoph, Subject, Wt, Dose) %>% distinct()
+head(sub_wt_dose)
+```
+
+
+Filtered by first subject:
+```{r}
+first_sub <- filter(theoph, Subject == 1)
+head(first_sub)
+```
+
+
+Filtered by first 4:
+```{r}
+first_four <- filter(theoph, Subject %in% 1:4)
+head(first_four)
+```
+
+
+Average concentration per subject:
+```{r}
+theoph %>% group_by(Subject) %>% summarise(avgCONC = mean(conc))
+```
+
+
+First subject on the plot:
+```{r}
+theoph %>% filter(Subject == 1) %>% ggplot(aes(x=Time, y=conc, color = Subject))+geom_line()
+
+```
+
+
+All subjects:
+```{r}
+theoph %>% select(Subject, Time, conc) %>% ggplot(aes(x= Time, y= conc, color = Subject))+geom_line()
+```
+
+
+Faceted by subject ID:
+```{r}
+theoph %>% select(Subject, Time, conc) %>% ggplot(aes(x= Time, y= conc, color = Subject))+geom_line() + facet_wrap(theoph$Subject)
+```
