@@ -1,0 +1,75 @@
+---
+title: Mod-6
+author: "Owen Harlacker"
+date: June 11, 2023
+output: html_document
+---
+## A report on Iris data from Module 3.
+The goal of this report is to:
+
+- Generate a simple report on the data
+- Show all visuals created
+
+## Data import and summary:
+```{r}
+# Let's get some data in here:
+summary(iris)
+```
+# Plots
+
+
+*A plot of the petal length vs the width:*
+```{r}
+plot(iris$Petal.Length, iris$Petal.Width,
+     xlab = 'Petal Length (cm)', ylab = 'Petal Width (cm)',
+     main = "Fisher's Iris Dataset", pch= 16, col = 'violet')
+```
+--------
+
+*One colored by species:*
+
+```{r}
+plot(iris$Petal.Length, iris$Petal.Width,
+     xlab = 'Petal Length (cm)', ylab = 'Petal Width (cm)',
+     main = "Fisher's Iris Dataset", pch= 16, col = iris$Species)
+legend('topleft', legend = levels(iris$Species), pch = 16, col=c(1,2,3))
+```
+
+
+*A subset of the data that only visualizes the Setosa species:*
+
+
+```{r}
+
+
+plot(subset(iris, Species == 'setosa')$Petal.Length, subset(iris, Species == 'setosa')$Petal.Width,
+     xlab = 'Petal Length (cm)', ylab = 'Petal Width (cm)',
+     main = "Fisher's Iris Dataset, Setosa Subset", pch= 16, col = 'goldenrod2')
+```
+
+
+*Differing symbology based on species:*
+```{r}
+plot(iris$Petal.Length, iris$Petal.Width,
+     xlab = 'Petal Length (cm)', ylab = 'Petal Width (cm)',
+     main = "Fisher's Iris Dataset", pch= c(15, 16, 23)[as.numeric(iris$Species)], col = 'orangered1')
+legend('topleft', legend = levels(iris$Species), pch= c(15, 16, 23), col='orangered1')
+```
+
+
+
+*Symbol sizing based on sepal width:*
+
+```{r}
+plot(iris$Petal.Length, iris$Petal.Width, xlab = 'Petal Length (cm)', ylab = 'Petal Width (cm)',
+     main = "Fisher's Iris Dataset", pch = 16, col = 'salmon', cex = c(0.5,1,1.5)[as.numeric(iris$Sepal.Width)])
+
+```
+
+*And finally one with a smoothing line*
+```{r}
+
+scatter.smooth(iris$Petal.Length, iris$Petal.Width,
+               xlab = 'Petal Length (cm)', ylab = 'Petal Width (cm)',               main = "Fisher's Iris Dataset",  col = 'violet')
+
+```
