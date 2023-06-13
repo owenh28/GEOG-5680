@@ -1,0 +1,76 @@
+---
+title: Module 7
+author: "Owen Harlacker"
+date: June 12, 2023
+output: html_document
+---
+
+## Part 1:
+Import data:
+```{r}
+library(ggplot2)
+library(reshape2)
+temperature <- read.csv('./Temperature.csv')
+summary(temperature)
+```
+
+Histogram of salinity values by year:
+```{r}
+histPlot <- ggplot(temperature, aes(x=Salinity, color = Year))
+histPlot + geom_histogram(fill = 'red') + facet_grid(~Year)
+```
+
+
+
+And for each month:
+```{r}
+histPlot + geom_histogram(fill = 'green') + facet_grid(Year~Month)
+```
+
+Boxplot of temperature values for each station:
+```{r}
+tempPlot <- ggplot(temperature, aes(x=Station, y= Temperature, color = Station))
+tempPlot + geom_boxplot()
+```
+
+
+And the box reorganized by low to high median temps:
+```{r}
+tempPlot + geom_boxplot(aes(x=reorder(Station, Temperature, median)))
+```
+
+
+## Part 2:
+Make a dataframe with required values and form plots:
+```{r}
+temperature$decdate <- temperature$Year + temperature$dDay3 / 365
+tempSalScatter <- ggplot(temperature, aes(x=decdate, y= Salinity, xlab = 'Date'), )
+tempTempScatter <- ggplot(temperature, aes(x=decdate, y= Temperature))
+```
+
+Salinity over time:
+```{r}
+tempSalScatter + geom_point(aes(color = Year))
+```
+
+
+Temperature over time:
+
+```{r}
+tempTempScatter + geom_point(aes(color= Year))
+
+```
+
+
+Salinity grouped by areas:
+
+
+```{r}
+tempSalScatter + geom_point(aes(color = Area)) + facet_wrap(~ Area)
+```
+
+
+And salinity by station, grouped by area:
+```{r}
+tempSalScatter + geom_line(aes(color = Station))+facet_wrap(~Area)
+```
