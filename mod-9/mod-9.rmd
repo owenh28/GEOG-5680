@@ -1,0 +1,95 @@
+---
+title: Module 9
+author: "Owen Harlacker"
+date: June 14, 2023
+output: html_document
+---
+
+## 1. Legolas actors:
+Generate 50 random heights:
+```{r}
+legolas <- rnorm(50, 195, 15)
+aragorn <- rnorm(50, mean=180, sd=10)
+gimli <- rnorm(50, mean=132, sd=15)
+
+sample(legolas, 5)
+```
+
+
+## 1a. t-test
+**Legolas and Aragorn:**
+```{r}
+t.test(legolas, aragorn, alternative = 'two.sided')
+```
+
+
+Based on the first t-test, we can reject the null and say that there is a significant difference between the legolas and aragorn actors.
+
+**Legolas and Gimli:**
+```{r}
+t.test(legolas, gimli, alternative = 'two.sided')
+```
+
+Based on the second t-test, we can reject the null and say that there is a significant difference between the legolas and gimli actors.
+
+## 1b. F-test
+**Gimli and Legolas:**
+```{r}
+var.test(gimli, legolas)
+```
+This test produces a very high p-value, which alludes to both datasets having a non-statistically different variance.
+
+## 2. Iris dataset testing
+```{r}
+library(dplyr, quietly = TRUE)
+iris.setosa <- iris %>% filter(Species == 'setosa')
+iris.versicolor <- iris %>% filter(Species =='versicolor')
+iris.virginica <- iris %>% filter(Species == 'virginica')
+
+```
+
+
+**Correlation test for the setosa species:**
+```{r}
+cor.test(iris.setosa$Sepal.Length, iris.setosa$Sepal.Width)
+```
+
+This test says that there is no statistically significant difference between the correlation of the sepal length and width, and a random distribution.
+
+
+**Versicolor variant**
+```{r}
+cor.test(iris.versicolor$Sepal.Length, iris.versicolor$Sepal.Width)
+
+```
+
+This test says that there is no statistically significant difference between the correlation of the sepal length and width, and a random distribution.
+
+**Virginica Species**
+```{r}
+cor.test(iris.virginica$Sepal.Length, iris.virginica$Sepal.Width)
+
+```
+This test demonstrates that there is a higher chance of correlation with this species than previous species.
+
+## 3. Deer Dataset
+Import data
+```{r}
+deer <- read.csv('../datasets/Deer.csv')
+summary(deer)
+```
+
+**Deer caught by month**
+```{r}
+chisq.test(table(deer$Month))
+```
+
+The data fits the distribution with normal sampling error
+
+
+**TB By Farm**
+```{r}
+chisq.test(table(deer$Farm, deer$Tb))
+```
+
+Data fits the distribution with normal sampling error
