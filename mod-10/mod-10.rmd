@@ -1,0 +1,70 @@
+---
+title: Module 10
+author: "Owen Harlacker"
+date: June 16, 2023
+output: html_document
+---
+
+Import the data:
+```{r}
+enrollment <- read.csv('./enrollmentForecast.csv')
+summary(enrollment)
+```
+
+
+## Scatterplots
+
+*ROLL vs UNEM*
+```{r}
+ggplot(enrollment, aes(x=ROLL, y= UNEM)) +geom_point()
+```
+
+*ROLL vs HGRAD*
+```{r}
+ggplot(enrollment, aes(x=ROLL, y= HGRAD)) +geom_point()
+
+```
+
+*ROLL vs INC*
+```{r}
+ggplot(enrollment, aes(x=ROLL, y= INC)) +geom_point()
+
+```
+
+## Model of UNEM and HGRAD to predict ROLL
+
+*Data visualization*
+```{r}
+ggplot(enrollment, aes(x=HGRAD+UNEM, y=ROLL )) +geom_point()
+cor.test(enrollment$ROLL, enrollment$HGRAD+enrollment$UNEM)
+
+
+```
+
+*Making the model*
+```{r}
+theModel <- lm(ROLL ~ (HGRAD + UNEM), data = enrollment)
+theModel
+```
+
+*Model evaluation*
+```{r}
+summary(theModel)
+anova(theModel)
+```
+The model shows that the unemployment rate has less of an effect on the enrollment.
+
+
+*Residual plots*
+```{r}
+hist(residuals(theModel))
+plot(theModel, which = 1)
+plot(theModel, which = 4)
+
+```
+
+*Predictions from the model*
+```{r}
+newx <- c(0.09, 25000)
+predict(theModel,HGRAD = 25000, UNEM=9 )
+```

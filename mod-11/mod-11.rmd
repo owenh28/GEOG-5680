@@ -1,0 +1,90 @@
+---
+title: Module 11
+author: "Owen Harlacker"
+date: June 17, 2023
+output: html_document
+---
+
+
+## Temperature dataset
+**Read the data**
+```{r}
+library(data.table)
+library(ggplot2)
+
+temp <- fread('./Temperature.csv')
+head(temp)
+
+```
+
+
+**Winter observations:**
+```{r}
+winter <- temp[Season == 'winter']
+head(winter)
+```
+
+
+**Winter and NC:**
+```{r}
+winterNC <- temp[Season == 'winter' & Area == 'NC']
+head(winterNC)
+```
+
+**Area, Season, and Temperature columns**
+```{r}
+ast <- temp[,.(Area, Season, Temperature)]
+head(ast)
+```
+
+**Area, and temperature for winter**
+```{r}
+atWinter <- temp[Season == 'winter', .(Area, Temperature)]
+head(atWinter)
+```
+**Observations in winter**
+```{r}
+obsWinter <- nrow(temp[Season=='winter'])
+obsWinter
+
+```
+
+
+**Mean of temperature and salinity in winter**
+```{r}
+mtsw <- temp[Season == 'winter', .(m_temp = mean(Temperature, na.rm = TRUE), m_sal = mean(Salinity, na.rm=TRUE))]
+mtsw
+```
+
+**Number of observations by station in the winter**
+```{r}
+sta_win <- temp[Season == 'winter', .N , by= Station]
+sta_win
+```
+
+**Number of observations per station per season**
+```{r}
+obs_staSeason <- temp[,.N, by=.(Station, Season)]
+obs_staSeason
+```
+
+
+**Aerage temperatures by month**
+```{r}
+m_tempMo <- temp[,.(m_temp = mean(Temperature, na.rm = TRUE)), by=.(Month)]
+m_tempMo
+```
+
+**Aerage temperatures by month and area**
+
+
+```{r}
+m_tempMoAr <- temp[,.(m_temp = mean(Temperature, na.rm = TRUE)), by=.(Month, Area)]
+m_tempMoAr
+```
+
+
+**Associated plot**
+```{r}
+ggplot(m_tempMoAr, aes(x=Month, y=m_temp, color = Area))+geom_line()+facet_wrap(~Area)+ylab('Temperature')+ggtitle('Monthly temperature for each station')+scale_x_continuous(breaks = c(2,4,6,8,10,12), limits =  c(1,12))
+```
