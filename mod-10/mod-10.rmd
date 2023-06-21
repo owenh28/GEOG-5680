@@ -7,6 +7,7 @@ output: html_document
 
 Import the data:
 ```{r}
+library(ggplot2)
 enrollment <- read.csv('./enrollmentForecast.csv')
 summary(enrollment)
 ```

@@ -1,0 +1,61 @@
+---
+title: Module 12
+author: "Owen Harlacker"
+date: June 19, 2023
+output: html_document
+---
+
+```{r}
+library(ggplot2, quietly = TRUE)
+library(terra, quietly = TRUE)
+library(RColorBrewer, quietly=TRUE)
+library(sf, quietly = TRUE)
+library(viridis, quietly = TRUE)
+```
+## Part 1
+**Get some data**
+```{r}
+countries <- st_read('./countries/countries/countries.shp')
+```
+
+**Median GDP**
+```{r}
+ggplot() +
+  geom_sf(data = countries, aes(fill = gdp_md_est)) +
+  scale_fill_viridis(option = "viridis") +
+  coord_sf(datum = 4326) +
+  theme_bw()
+```
+
+
+**Income Group**
+```{r}
+ggplot() +
+  geom_sf(data = countries, aes(fill = income_grp)) +
+  scale_fill_viridis(option = "rocket", discrete = TRUE) +
+  theme_bw()
+```
+
+
+## Part 2
+
+**Read the dataset and fix the extent**
+```{r}
+air_mean <- rast('./air.mon.mean.nc')
+set.ext(air_mean, value = c(0,360,-90,90))
+crs(air_mean) <- 'EPSG:4326'
+air_mean
+```
+
+**Global means by month**
+```{r}
+g.mean <- global(air_mean, mean)
+g.mean$index <- (seq(1, nrow(g.mean))/12)+1948
+head(g.mean)
+```
+
+
+**Data plotted out**
+```{r}
+ggplot(g.mean, aes(x= index,y=mean))+geom_line(aes(color = mean))+ xlab('Year')+ylab('Temperature mean')
+```
