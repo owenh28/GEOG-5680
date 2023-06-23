@@ -74,7 +74,7 @@ ggplot(usComp, aes(x=category, fill = category))+ geom_bar()+theme(axis.text.x =
 
 ```
 \
-Banking holds the biggest category
+Banking holds the biggest category within the dataset for the US, with a not-so-close second place going to diversified financials.
 
 ### Japanese Companies
 ```{r}
@@ -84,12 +84,14 @@ jpComp %>% kable %>% kable_styling("striped", full_width = F) %>% scroll_box( he
 
 ggplot(jpComp, aes(x=category, fill = category))+ geom_bar()+theme(axis.text.x = element_text(angle = 90, vjust = 0.5))+theme(legend.position="none")+labs(x='Category', y='Number of companies', title = 'Data breakdown by category for Japan', subtitle = "Note the absence of the 'Aerospace & defense' category")
 ```
+Banking also takes the win here, with an even less close second place of Diversified Financials. Japan does not have as many clear spikes in frequency as seen with the US.
+
 
 ### Comparison
 To find the higher ranking country, I am going to calculate the median rank for each. I will first create a boxplot of each:
 ```{r}
 ## The joys of ggplot2
-ggplot(usComp, aes(x= country, y=rank, fill=country))+geom_jitter(aes(color=country))+geom_boxplot(aes(alpha = 0.7))+geom_jitter(data=jpComp, aes(color = country))+geom_boxplot(data=jpComp, aes(alpha =0.7 ))+labs(title = 'Comparison of company rankings between the two', subtitle = 'Lower is better',x='Country', y= 'Rank')
+ggplot(usComp, aes(x= country, y=rank, fill=country))+geom_jitter(aes(color=country))+geom_boxplot(alpha = 0.7)+geom_jitter(data=jpComp, aes(color = country))+geom_boxplot(data=jpComp, alpha =0.7 )+labs(title = 'Comparison of company rankings between the two', subtitle = 'Lower is better',x='Country', y= 'Rank')
 ```
 \
 This boxplot shows that the United States consistently ranks higher on the chart (lower rank number).
@@ -107,6 +109,7 @@ This boxplot shows that the United States consistently ranks higher on the chart
 
 Model from assets, market value, and sales
 ```{r}
+# water reservoir %>% my sink %>% sewers %>% hopefully a treatment plant %>% the river
 modelData <- forbes %>% select(c(assets, marketvalue, sales, profits))
 modelData %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits, color = 'lightsalmon'))+geom_point()
 ggpairs(modelData, aes(color = 'lightsalmon'))
@@ -134,42 +137,75 @@ anova(profModel)
 Plotting the model:
 ```{r}
 
-hist(residuals(profModel), col = 'slategray2')
+hist(residuals(profModel), col = 'slategray2', main = 'Histogram of residuals for the model', xlab = 'Residuals')
 ```
 \
 The residuals of this model are extremely biased and the distribution is skewed quite left.
-```{r}
 
-modelData %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = '#43CD80')+geom_abline(slope=coef(profModel)[2], intercept = coef(profModel)[1], color='royalblue3')
+#### Model Results
+```{r}
+# Have they made a ggplot version that can just read my mind and format the plot exactaly how I want?
+modelData %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = '#43CD80', size = 2, )+geom_abline(slope=coef(profModel)[2], intercept = coef(profModel)[1], color='royalblue3', size = 1.5, linetype = 'dashed') + labs(x='Assets + Market Value + Sales', y='Profits', title = 'Input data and output model function')
 
 ```
 
 
-Overall, this is a pretty poor model for predicting the profits. I may have spoke too quickly when I said the high correlation wasn't an issue.
+Overall, this is a pretty poor model for predicting the profits. I may have spoke too quickly when I said the high correlation wasn't an issue. One of the causes of a poor model could be the variety in the way different countries handle economics, corporate regulations, etc.
 
 
 
 ## Part 4: The Model II - Making one for both the US and Japan {.tabset}
 
 ### USA
+
+#### Input Data:
 We already have the data subsetted from part 2
 ```{r}
 usCompMod <- usComp %>% select(c(profits, assets, marketvalue, sales))
-usCompMod %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = 'seagreen')
-ggpairs(usCompMod, aes(color = 'salmon'))
+usCompMod %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = 'seagreen')+labs(x='Assets + Market Value + Sales', y='Profits', title = 'Input data for the US model')
+ggpairs(usCompMod, aes(color = 'salmon'), title = 'Relations between all variables')
+# Does ggpairs have a quiet mode?
 
 ```
+
+#### US model creation
 ```{r}
 usModel <- lm(profits~assets+marketvalue+sales, data = usCompMod)
 summary(usModel)
 anova(usModel)
-hist(residuals(usModel), col = 'slategray2')
+hist(residuals(usModel), col = 'slategray2', main = 'Histogram of residuals for the US model', xlab = 'Residuals')
 ```
 
-This model fits the data much better. The r-squared value is 0.79, the t-values are higher with much lower associated p-values. The residuals are more normally distributed, but show major bias in the ~ 1 area.
+This model fits the data much better. The r-squared value is 0.79, the t-values are higher with much lower associated p-values. The residuals are more normally distributed, but show major bias in the ~ 1 area. This bias is countered by the second-largest group, right below 0.
+
+#### US model plot:
 ```{r}
-usCompMod %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = '#43CD80')+geom_abline(slope=coef(usModel)[2], intercept = coef(usModel)[1], color='royalblue3')
+usCompMod %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = '#43CD80', size = 2)+geom_abline(slope=coef(usModel)[2], intercept = coef(usModel)[1], color='royalblue3', linetype = 'dashed', size = 1.5)+labs(x='Assets + Market Value + Sales', y='Profits', title = 'Input data and output model function for the US')
 ```
 
 
 ### Japan
+
+#### Input Data:
+```{r}
+jpCompMod <- jpComp %>% select(c(profits, assets, marketvalue, sales))
+jpCompMod %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = 'seagreen')
+# ggpairs, the exact thing I needed but with even more confusing asthetics bindings
+ggpairs(jpCompMod, aes(color = 'salmon'), title = 'Relations between all variables')
+```
+Japan's input data has the lowest correlation between variables of the three models. This would in theory mean a stronger, less-incorrect model.
+
+#### Japan model creation
+```{r}
+japanModel <- lm(profits ~ assets + marketvalue + sales, data= jpCompMod)
+summary(japanModel)
+anova(japanModel)
+hist(residuals(japanModel), col = 'slategray2', main = 'Histogram of residuals for the Japan Model', xlab = 'Residuals')
+```
+This model falls between the US and the non-subsetted model in terms of quality, with the US model being the best. The r-squared value is slightly lower at 0.68, the t-values are smaller, and the associated p-values are slightly larger. This model, however, has better residual distribution with an almost even distribution on both sides of 0.
+
+#### Plot of the Japan Model
+```{r}
+# Every plot seems to require an essay length of code...
+jpCompMod %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = '#43CD80', size = 2)+geom_abline(slope=coef(usModel)[2], intercept = coef(japanModel)[1], color='royalblue3', size = 1.5, linetype = 'dashed') + labs(x='Assets + Market Value + Sales', y='Profits', title = 'Input data and output model function for Japan')
+```
