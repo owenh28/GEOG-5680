@@ -1,0 +1,175 @@
+---
+title: GEOG-5680 Project 2
+author: "Owen Harlacker"
+date: June 21, 2023
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_floating: true
+---
+```{r}
+library(dplyr, quietly = TRUE)
+library(ggplot2, quietly=TRUE)
+library(data.table, quietly=TRUE)
+library(knitr)
+library(kableExtra)
+library(GGally)
+```
+## Part 1: Exploring the data
+
+**Import the file and run some basic info functions**
+```{css, echo=FALSE}
+.scroll-100 {
+  max-height: 100px;
+  overflow-y: auto;
+  background-color: inherit;
+}
+```
+```{r}
+forbes <- fread('./Forbes2000.csv')
+forbes$antirank <- (nrow(forbes)-forbes$rank)
+
+```
+**A few graphs**
+```{r}
+
+ggplot(forbes, aes(x=rank, y=marketvalue)) + geom_line()+labs(x='Rank', y='Market Value', title = 'Company rank vs. market value')
+```
+Company types
+```{r}
+ ggplot(forbes, aes(x=category, fill = category))+ geom_bar()+theme(axis.text.x = element_text(angle = 90, vjust = 0.5))+theme(legend.position="none")+labs(x='Category', y='Number of companies', title = 'Data breakdown by category')
+
+```
+
+
+Top performer for each country
+```{r}
+
+maxCountry <- forbes[forbes[,.I[profits == max(profits, na.rm = TRUE)], by=country]$V1]
+maxCountry <- maxCountry[!is.na(name)]
+
+maxCountry %>% kable %>% kable_styling("striped", full_width = F) %>% scroll_box( height = "400px")
+
+```
+
+---------
+
+```{r}
+
+# Average profit per country
+forbes %>% group_by(country) %>% summarise(meanProfit = mean(profits, na.rm = TRUE))%>% ggplot( aes(x=country,y=meanProfit, color = country))+geom_point()+theme(axis.text.x = element_text(angle = 90, vjust = 0.5), legend.position = 'none')+labs(x='Country', y='Average profit', title = 'Average profit by country')
+```
+
+
+## Part 2: USA vs. Japan {.tabset}
+
+### US Companies
+```{r}
+usComp <- forbes[country== 'United States']
+nrow(usComp)
+usComp %>% kable %>% kable_styling("striped", full_width = F) %>% scroll_box(height = "350px")
+
+ggplot(usComp, aes(x=category, fill = category))+ geom_bar()+theme(axis.text.x = element_text(angle = 90, vjust = 0.5))+theme(legend.position="none")+labs(x='Category', y='Number of companies', title = 'Data breakdown by category for the US')
+
+```
+\
+Banking holds the biggest category
+
+### Japanese Companies
+```{r}
+jpComp <- forbes[country=='Japan']
+nrow(jpComp)
+jpComp %>% kable %>% kable_styling("striped", full_width = F) %>% scroll_box( height = "350px")
+
+ggplot(jpComp, aes(x=category, fill = category))+ geom_bar()+theme(axis.text.x = element_text(angle = 90, vjust = 0.5))+theme(legend.position="none")+labs(x='Category', y='Number of companies', title = 'Data breakdown by category for Japan', subtitle = "Note the absence of the 'Aerospace & defense' category")
+```
+
+### Comparison
+To find the higher ranking country, I am going to calculate the median rank for each. I will first create a boxplot of each:
+```{r}
+## The joys of ggplot2
+ggplot(usComp, aes(x= country, y=rank, fill=country))+geom_jitter(aes(color=country))+geom_boxplot(aes(alpha = 0.7))+geom_jitter(data=jpComp, aes(color = country))+geom_boxplot(data=jpComp, aes(alpha =0.7 ))+labs(title = 'Comparison of company rankings between the two', subtitle = 'Lower is better',x='Country', y= 'Rank')
+```
+\
+This boxplot shows that the United States consistently ranks higher on the chart (lower rank number).
+
+
+
+
+
+
+
+
+
+
+## Part 3: Creating a model of the data
+
+Model from assets, market value, and sales
+```{r}
+modelData <- forbes %>% select(c(assets, marketvalue, sales, profits))
+modelData %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits, color = 'lightsalmon'))+geom_point()
+ggpairs(modelData, aes(color = 'lightsalmon'))
+```
+\
+The correlation between the three input variables appears to be more than a bit correlated, but this could possibly be equated to the high concentration of points surrounding the origin. This will probably not have a major effect on the model.
+
+
+
+Making the model and testing it
+```{r}
+profModel <- lm(profits ~ assets+ marketvalue+sales, data = modelData)
+summary(profModel)
+```
+
+Looking at the summary of the model created, market value seems to have the largest effect on the calculated profit, with a ~3.6% increase on the profit per 1% increase in market value. Assets have an almost negligible negative effect on the calculation with a -0.08% estimated effect. Sales has a +0.9% effect, meaning higher sales appear to contribute to increases in profit.
+
+This model is a pretty poor fit with an adjusted R-squared value of only 0.31. The standard error is low, which is good, but so are the t-values which isn't.
+
+```{r}
+anova(profModel)
+```
+
+
+Plotting the model:
+```{r}
+
+hist(residuals(profModel), col = 'slategray2')
+```
+\
+The residuals of this model are extremely biased and the distribution is skewed quite left.
+```{r}
+
+modelData %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = '#43CD80')+geom_abline(slope=coef(profModel)[2], intercept = coef(profModel)[1], color='royalblue3')
+
+```
+
+
+Overall, this is a pretty poor model for predicting the profits. I may have spoke too quickly when I said the high correlation wasn't an issue.
+
+
+
+## Part 4: The Model II - Making one for both the US and Japan {.tabset}
+
+### USA
+We already have the data subsetted from part 2
+```{r}
+usCompMod <- usComp %>% select(c(profits, assets, marketvalue, sales))
+usCompMod %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = 'seagreen')
+ggpairs(usCompMod, aes(color = 'salmon'))
+
+```
+```{r}
+usModel <- lm(profits~assets+marketvalue+sales, data = usCompMod)
+summary(usModel)
+anova(usModel)
+hist(residuals(usModel), col = 'slategray2')
+```
+
+This model fits the data much better. The r-squared value is 0.79, the t-values are higher with much lower associated p-values. The residuals are more normally distributed, but show major bias in the ~ 1 area.
+```{r}
+usCompMod %>% ggplot(aes(x=(assets+ marketvalue+ sales), y= profits))+geom_point(color = '#43CD80')+geom_abline(slope=coef(usModel)[2], intercept = coef(usModel)[1], color='royalblue3')
+```
+
+
+### Japan

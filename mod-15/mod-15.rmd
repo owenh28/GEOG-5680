@@ -1,0 +1,98 @@
+---
+title: Module 15
+author: "Owen Harlacker"
+date: June 20, 2023
+output: html_document
+---
+**Packages**
+```{r}
+library(tmap)
+library(sf)
+library(raster)
+```
+
+
+## Example 1:
+
+**Load data and organize**
+```{r}
+NY8 <- st_read('./NY_data/NY8_utm18.shp')
+Syracuse <- NY8[NY8$AREANAME == 'Syracuse city',]
+```
+
+**Plot of syracuse using base package**
+```{r}
+plot(Syracuse[,"POP8"])
+```
+
+
+**Using tmap package**
+```{r}
+tm_shape(Syracuse) + tm_borders()+tm_fill('POP8', palette = 'viridis', style = 'quantile') +
+  tm_graticules(col='lightgray')+ tm_compass(position = c("left", "bottom"))+  tm_credits(date(), position = c("right", "top"))
+
+```
+
+
+**Interactively**
+```{r}
+tmap_mode("view")
+names(Syracuse)
+tm_shape(Syracuse) + tm_borders() + tm_fill("Cases", palette = "Greens")
+
+```
+
+
+**Change tmap back to plot**
+```{r}
+tmap_mode('plot')
+```
+
+
+## Example 2
+
+**Data and processing**
+```{r}
+wna_climate <- read.csv('./WNAclimate.csv')
+str(wna_climate)
+wna_climate <- st_as_sf(wna_climate, coords = c('LONDD', 'LATDD'), crs = 4326)
+```
+
+
+**Plotted**
+```{r}
+tm_shape(wna_climate)+tm_symbols(col = 'Jan_Tmp', alpha = 0.5, palette = '-RdBu')
+
+```
+
+
+**Add country borders**
+```{r}
+countries <- st_read('./ne_50m_admin_0_countries/ne_50m_admin_0_countries.shp')
+tm1 <- tm_shape(wna_climate)+tm_symbols(col = 'Jan_Tmp', alpha = 0.75, palette = '-RdBu') + tm_shape(countries)+
+  tm_borders(col='gray')+tm_style('classic')
+tm2 <- tm_shape(wna_climate)+tm_symbols(col = 'Jul_Tmp', alpha = 0.75, palette = '-RdBu') + tm_shape(countries)+
+  tm_borders(col='gray')+tm_style('classic')
+
+tmap_arrange(tm1, tm2)
+```
+
+
+## Example 3
+
+**Data and processing**
+```{r}
+r <- raster('./air.mon.ltm.nc', varname = 'air')
+
+r <- rotate(r)
+crs(r) <- 4326
+names(r) <- 'jan_tmp'
+```
+
+
+**Plotting**
+```{r}
+tm_shape(r)+tm_raster('jan_tmp', style = 'fisher', palette = '-RdBu', n=11) + tm_shape(countries)+
+  tm_borders()+tm_layout(legend.bg.color ='white', legend.bg.alpha = 0.6, legend.outside = TRUE, legend.outside.position = 'left')
+
+```
